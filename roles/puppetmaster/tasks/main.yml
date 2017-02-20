@@ -1,0 +1,40 @@
+---
+- name: Stat Puppet repository
+  stat: path=/etc/yum.repos.d/puppetlabs-pc1.repo
+  register: puppetrpm
+
+- name: Enable Puppet repository
+  command: rpm -Uvh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm
+  when: puppetrpm.stat.exists == False
+
+- name: Install Puppet server
+  yum: name=puppetserver state=latest
+
+- name: Check existence of certificates
+  stat: path=/etc/puppetlabs/puppet/ssl/
+  register: ssldir
+
+- name: Ensure Puppet is stopped
+  service: name=puppetserver state=stopped
+
+- name: Copy Puppet ssl directory to safety
+  copy: remote_src=True src=/etc/puppetlabs/puppet/ssl dest=/etc/puppetlabs/puppet/ssl.bak
+  when: ssldir.stat.isdir is defined and p.stat.isdir
+
+- name: Create certificate
+  become: yes
+  shell: /opt/puppetlabs/bin/puppet master --no-daemonize --verbose
+  args:
+    executable: /bin/bash
+  async: 10
+  poll: 0
+
+- name: Start Puppet server
+  service: name=puppetserver state=started enabled=yes
+
+- name: Install Puppet ntp
+  shell: /opt/puppetlabs/bin/puppet module install puppetlabs-ntp
+
+- name: Install r10k
+  shell: /opt/puppetlabs/puppet/bin/gem install r10k
+
