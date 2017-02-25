@@ -18,8 +18,8 @@
   service: name=puppetserver state=stopped
 
 - name: Copy Puppet ssl directory to safety
-  copy: remote_src=True src=/etc/puppetlabs/puppet/ssl dest=/etc/puppetlabs/puppet/ssl.bak
-  when: ssldir.stat.isdir is defined and p.stat.isdir
+  command: mv /etc/puppetlabs/puppet/ssl /etc/puppetlabs/puppet/ssl.bak
+  when: ssldir.stat.isdir is defined and ssldir.stat.isdir
 
 - name: Create certificate
   become: yes
@@ -38,3 +38,17 @@
 - name: Install r10k
   shell: /opt/puppetlabs/puppet/bin/gem install r10k
 
+- name: Autosign
+  lineinfile: name="/etc/puppetlabs/puppet/autosign.conf" line="service.local" state=present create=yes mode=0644 owner=root group=root
+
+- name: Development environment
+  file: name="/etc/puppetlabs/code/environments/development" state=directory owner=root group=root
+
+- name: Development puppetfile
+  lineinfile: name="/etc/puppetlabs/code/environments/development/Puppetfile" line="{{ item }}" state=present create=yes mode=0644 owner=root group=root
+  with_items:
+    - "mod 'service-test-firewall',"
+    - "  :git => 'https://github.com/pkoskine/puppet-service-test-firewall'"
+
+- name: Install Development environment
+  command: "cd /etc/puppetlabs/code/environments/development/ && r10k puppetfile install"
