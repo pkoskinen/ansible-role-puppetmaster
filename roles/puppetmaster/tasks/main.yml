@@ -47,8 +47,12 @@
 - name: Development puppetfile
   lineinfile: name="/etc/puppetlabs/code/environments/development/Puppetfile" line="{{ item }}" state=present create=yes mode=0644 owner=root group=root
   with_items:
-    - "mod 'service-test-firewall',"
+    - "mod 'stf',"
     - "  :git => 'https://github.com/pkoskine/puppet-service-test-firewall'"
+    - ""
+    - "mod 'firewalld',"
+    - "  :git => 'git://github.com/jpopelka/puppet-firewalld.git',"
+    - "  :ref => 'c518411c58f04d431d4500b8cc5cd1c55f4a0d8e'"
 
 - name: Install Development environment
-  command: "cd /etc/puppetlabs/code/environments/development/ && r10k puppetfile install"
+  command: "cd /etc/puppetlabs/code/environments/development/ && /opt/puppetlabs/puppet/bin/r10k puppetfile install"
