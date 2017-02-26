@@ -7,8 +7,11 @@
   command: rpm -Uvh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm
   when: puppetrpm.stat.exists == False
 
-- name: Install Puppet server
-  yum: name=puppetserver state=latest
+- name: Install Puppet server and git
+  yum: name={{ item }} state=latest
+  with_items:
+    - puppetserver
+    - git
 
 - name: Check existence of certificates
   stat: path=/etc/puppetlabs/puppet/ssl/
@@ -48,7 +51,7 @@
   lineinfile: name="/etc/puppetlabs/code/environments/development/Puppetfile" line="{{ item }}" state=present create=yes mode=0644 owner=root group=root
   with_items:
     - "mod 'stf',"
-    - "  :git => 'https://github.com/pkoskine/puppet-service-test-firewall'"
+    - "  :git => 'https://github.com/pkoskinen/puppet-service-test-firewall'"
     - ""
     - "mod 'firewalld',"
     - "  :git => 'git://github.com/jpopelka/puppet-firewalld.git',"
