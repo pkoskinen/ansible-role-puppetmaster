@@ -66,5 +66,16 @@
   service: name=puppetserver state=restarted
 
 - name: Install Development environment
-  command: "cd /etc/puppetlabs/code/environments/development/ && /opt/puppetlabs/puppet/bin/r10k puppetfile install"
+  shell: "cd /etc/puppetlabs/code/environments/development/ && /opt/puppetlabs/puppet/bin/r10k puppetfile install"
 
+- name: Add alias IP for ntpd demonstration
+  command: ip address add 10.100.100.11/24 dev eth1
+
+- name: Install Pip
+  yum: name={{ item }} state=latest
+  with_items:
+    - "epel-release"
+    - "python-pip"
+
+- name: Install scapy
+  command: pip install scapy
